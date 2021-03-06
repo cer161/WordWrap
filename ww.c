@@ -6,16 +6,21 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+
 #define MAX_LENGTH 1000
-#define BUF_SIZE 1000
+#define BUF_SIZE 20
 
-int width;
-int exceed_width;
-int chars;
-char* prev;
-int check=0;
-char lastChar;
+static int width;
+static int exceed_width;
+static int chars;
+static char* prev;
+static int check = 0;
 
+struct linkedList{
+    char* data;
+    struct linkedList *next;
+};
+typedef struct linkedList linkedList;
 
 
 //Wraps the text from Stdin (Doesnt take into consideration blank lines bc no new lines in stdin?)
@@ -77,20 +82,16 @@ int wrapFile(char* input, int bytes){
 		split = 0;
 	}
 	//else if the previous last char was a space we are good
-	else if(lastChar == ' '){
-		split = 0;
-	}
+	
 	else{
 	//we are not good , the word was cutoff
+		//printf("Split here: ");
 		split = 1;	
 	}
 	
-	//append input to prev
 	const char delim[2] = " ";
-	
 	char* token = strtok(input, delim);
 	
-
 	while(token != NULL){
 		//if the token contains a new line character, delete the new line character
 		if(strchr(token, '\n')){
@@ -138,7 +139,7 @@ int isDir(char *fileName){
 	}
 	if(S_ISDIR(data.st_mode)){
 		//S_ISDIR macro is true if file is a directory
-		return 1;
+		return 1;//
 	}
 	if(S_ISREG(data.st_mode)){
 		//S_ISREG macro is true if the file is a regular file
@@ -148,14 +149,26 @@ int isDir(char *fileName){
 	return 0;
 }
 
+//free the list 
+void freeList(linkedList** list){
+	linkedList* temp = *list;
+	linkedList* next = NULL;
+	while(temp != NULL){
+		next = temp->next;
+		free(temp->data);
+		free(temp);
+		temp = next;
+	}
+	*list = NULL;
+}
+
 
 int main (int argc, char** argv) {
-    
+  
 	if(argc == 1 || argc > 3){
         	return EXIT_FAILURE;
     	}
 	
-
 	char* widthString = argv[1];
 	width = atoi(widthString);
 	exceed_width = 0;
@@ -175,8 +188,11 @@ int main (int argc, char** argv) {
 
     	//The user entered a file name, read from the file and print to standard output
     	if(argc == 3){
-		char *input = (char*) calloc(MAX_LENGTH, sizeof(char));
-		//output = (char*) calloc(MAX_LENGTH, sizeof(char));
+		char* input = (char*) calloc(MAX_LENGTH, sizeof(char*) * BUF_SIZE);
+		linkedList* curr = malloc(sizeof(linkedList));
+		linkedList* head;
+		curr->data = malloc(sizeof(char*) * BUF_SIZE);
+		curr->next = NULL;
         	char* fileName = argv[2];
 		chars = 0;
 		//Check if user inputed a directory or a file 
@@ -189,41 +205,43 @@ int main (int argc, char** argv) {
 				perror("There was an error opening the file");
 				return EXIT_FAILURE;
 			}
-			
-			//Get number of blank lines and corresponding line number
-			//int blankLines = system("sed -n '/^$/=' file.txt");
-
-			//Get inode information
-			//struct stat file_stat;
-			//int returnValue;
-			//returnValue = fstat(f, &file_stat);
-			//if(returnValue<0){
-			//	return EXIT_FAILURE;
-			//}
-			//int inode = file_stat.st_ino;
 			int bytes;
 			int buf = BUF_SIZE;
 			int loop = 0;
+			int i = 0;
 			//Read the contents of the file
 			while(bytes != 0){
-				//store the last character being stored in the previous buffer
-				if(loop == 1){
-				lastChar = input[bytes-1];
+				if(loop != 1){
+					bytes = read(f, curr->data, BUF_SIZE);
+					curr->data[bytes] = '\0';
+					//wrapFile(curr->data, bytes);
+					head = curr;
+					loop = 1;
 				}
-				bytes = read(f, input, BUF_SIZE);
-				input[bytes] = '\0';
-				wrapFile(input, bytes);	
-				loop = 1;		
+				else{
+					curr->next = malloc(sizeof(linkedList));
+					curr = curr->next;
+				 	curr->data = malloc(sizeof(char*) * BUF_SIZE);
+					curr->next = NULL;
+					bytes = read(f, curr->data, BUF_SIZE);
+					curr->data[bytes] = '\0';
+					//wrapFile(curr->data, bytes);	
+				}
+	
+			}
+			//Need to store this in a char* and input that into wrapFile
+			while(head != NULL){
+				printf("%s", head->data);
+				head = head->next;
 			}
 			
-		
+
 			//Close the file and return exit failure upon error
 			if(close(f) < 0){
 				perror("There was an error closing the file");
 				return EXIT_FAILURE;
 			}
 		}
-
 		//The user entered a directory
 		if(check == 1){
 		
@@ -233,7 +251,7 @@ int main (int argc, char** argv) {
 		if(check == 0){
 			return EXIT_FAILURE;
 		}
-		
+		freeList(&head);
 		free(input);
     	}
 
