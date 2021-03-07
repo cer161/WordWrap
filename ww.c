@@ -72,23 +72,9 @@ void deleteChar(char *str, char newLine){
 
 
 //Wraps the text from a file and prints it to stdout
-//Still need to edit to take into consideration empty lines and words being cut off by the buffer
-int wrapFile(char* input, int bytes){
-	int split = 0;
-	//handle words cut off by the buffer
+//Still need to edit to take into consideration empty lines 
+int wrapFile(char* input){
 
-	//If the first char in input is a space we are good
-	if(input[0] == ' '){
-		split = 0;
-	}
-	//else if the previous last char was a space we are good
-	
-	else{
-	//we are not good , the word was cutoff
-		//printf("Split here: ");
-		split = 1;	
-	}
-	
 	const char delim[2] = " ";
 	char* token = strtok(input, delim);
 	
@@ -114,12 +100,7 @@ int wrapFile(char* input, int bytes){
 			}
 			//If there is room on the current line, print the toke on the current line
 			else{	
-				if(split == 0){
-					printf("%s ", token);
-				}
-				else{
-					printf("%s ", token);
-				}
+				printf("%s ", token);
 				chars+=1;
 			}
 		}
@@ -128,6 +109,8 @@ int wrapFile(char* input, int bytes){
 	}
 	return 0;
 }
+
+
 
 //Method to check if the char* points to a directory or a file. Return 1 if file is a directory, return 2 if file is a file.
 int isDir(char *fileName){
@@ -188,7 +171,7 @@ int main (int argc, char** argv) {
 
     	//The user entered a file name, read from the file and print to standard output
     	if(argc == 3){
-		char* input = (char*) calloc(MAX_LENGTH, sizeof(char*) * BUF_SIZE);
+		char* input;
 		linkedList* curr = malloc(sizeof(linkedList));
 		linkedList* head;
 		curr->data = malloc(sizeof(char*) * BUF_SIZE);
@@ -208,33 +191,36 @@ int main (int argc, char** argv) {
 			int bytes;
 			int buf = BUF_SIZE;
 			int loop = 0;
-			int i = 0;
-			//Read the contents of the file
+			int length = 0;
+
+			//Read the contents of the file into a linked list and append that data into a char* 
 			while(bytes != 0){
-				if(loop != 1){
+				if(loop == 0){
 					bytes = read(f, curr->data, BUF_SIZE);
+					length = bytes;
 					curr->data[bytes] = '\0';
-					//wrapFile(curr->data, bytes);
 					head = curr;
+					input = curr->data;
 					loop = 1;
 				}
 				else{
+					loop=1;
 					curr->next = malloc(sizeof(linkedList));
 					curr = curr->next;
 				 	curr->data = malloc(sizeof(char*) * BUF_SIZE);
 					curr->next = NULL;
 					bytes = read(f, curr->data, BUF_SIZE);
 					curr->data[bytes] = '\0';
-					//wrapFile(curr->data, bytes);	
+					loop--;
+					while(curr->data[loop] != '\0'){
+						input[length] = curr->data[loop];
+						loop++;
+						length++;				
+					}
 				}
-	
 			}
-			//Need to store this in a char* and input that into wrapFile
-			while(head != NULL){
-				printf("%s", head->data);
-				head = head->next;
-			}
-			
+			//wrap the file
+			wrapFile(input);			
 
 			//Close the file and return exit failure upon error
 			if(close(f) < 0){
@@ -251,10 +237,9 @@ int main (int argc, char** argv) {
 		if(check == 0){
 			return EXIT_FAILURE;
 		}
-		freeList(&head);
-		free(input);
-    	}
 
+		freeList(&head);
+    	}
 
     	if(exceed_width == 1){
 		return EXIT_FAILURE;
