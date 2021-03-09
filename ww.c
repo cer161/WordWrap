@@ -13,8 +13,7 @@
 static int width;
 static int exceed_width;
 static int chars;
-static char* prev;
-static int check = 0;
+static int incorrectToken;
 
 struct linkedList{
     char* data;
@@ -56,57 +55,73 @@ int wrapStdin(char* input){
 	return 0;
 }
 
-//Method to delete a character from a string
-void deleteChar(char *str, char newLine){
-	char *src;
-	char *dst;
-	for(src = dst = str; *src != '\0'; src++){
-		*dst = *src;
-		if(*dst != newLine){
-			dst++;
-		}
-
+//Method to replace all newline chars with a space
+char* deleteChar(char *str, char newLine){
+	char *pos = strchr(str, newLine);
+	while(pos){
+		*pos = ' ';
+		incorrectToken++;
+		pos = strchr(pos, newLine);
 	}
-	*dst = '\0';
+	return str;
+}
+
+//Helper method to print each word on the correct line
+void printWord(char* word){
+	//If the token exceeds the width, print token on an individual line
+	if(strlen(word) > width){
+		printf("\n%s\n", word);
+		chars=0;
+		exceed_width = 1;
+	}
+	else{
+		chars+=strlen(word)+1;
+		//if adding the token to the current line makes the line length exceed width, print token on a new line
+		if(chars > width){
+			printf("\n%s ", word);
+			chars=strlen(word) + 1;	
+		}
+		//If there is room on the current line, print the token on the current line
+		else{	
+			if(word[strlen(word)-1] == ' ') printf("%s", word);
+			else printf("%s ", word);
+		}
+	}
 }
 
 
 //Wraps the text from a file and prints it to stdout
 //Still need to edit to take into consideration empty lines 
 int wrapFile(char* input){
-
 	const char delim[2] = " ";
 	char* token = strtok(input, delim);
-	
+	char* tokenHelper;
 	while(token != NULL){
+		//printf("TOKEN: ");
+		//printf("%s", token);
+		incorrectToken = 0;
 		//if the token contains a new line character, delete the new line character
 		if(strchr(token, '\n')){
-			deleteChar(token, '\n');
-			//printf("\nDeleted a new line character\n");
+			token = deleteChar(token, '\n');
 		}
-		//If the token exceeds the width, print token on an individual line
-		if(strlen(token) > width){
-			printf("\n%s\n", token);
-			chars=0;
-			exceed_width = 1;
+		if(strchr(token, '\t')){
+			token = deleteChar(token, '\t');
 		}
-		else{
-			chars+=strlen(token);
-			//if adding the token to the current line makes the line length exceed width, print token on a new line
-			if(chars > width){
-				printf("\n%s ", token);
-				chars=strlen(token) + 1;
-			
+
+		//If the token contains multiple words, seperate them
+		if(incorrectToken > 1){
+			char* partial = token;
+			char* word;
+			while((word = strsep(&partial, " ")) != NULL){
+				printWord(word);
 			}
-			//If there is room on the current line, print the toke on the current line
-			else{	
-				printf("%s ", token);
-				chars+=1;
-			}
+			token = strtok(NULL, delim);
+			continue;	
 		}
-		prev = token;
+		printWord(token);	
 		token = strtok(NULL, delim);
 	}
+	printf("\n");
 	return 0;
 }
 
