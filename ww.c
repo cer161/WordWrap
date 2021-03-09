@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -96,13 +97,14 @@ int wrapFile(char* input){
 	const char delim[2] = " ";
 	char* token = strtok(input, delim);
 	char* tokenHelper;
+	int nonBlank;
 	while(token != NULL){
-		//printf("TOKEN: ");
-		//printf("%s", token);
+		nonBlank = 1;
 		incorrectToken = 0;
 		//if the token contains a new line character, delete the new line character
 		if(strchr(token, '\n')){
-			token = deleteChar(token, '\n');
+			if(token[0] == '\n') nonBlank = 0;
+			if(nonBlank == 1) token = deleteChar(token, '\n');	
 		}
 		if(strchr(token, '\t')){
 			token = deleteChar(token, '\t');
@@ -118,7 +120,8 @@ int wrapFile(char* input){
 			token = strtok(NULL, delim);
 			continue;	
 		}
-		printWord(token);	
+		printWord(token);
+		//printf("%d", incorrectToken);	
 		token = strtok(NULL, delim);
 	}
 	printf("\n");
