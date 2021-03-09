@@ -92,7 +92,6 @@ void printWord(char* word){
 
 
 //Wraps the text from a file and prints it to stdout
-//Still need to edit to take into consideration empty lines 
 int wrapFile(char* input){
 	const char delim[2] = " ";
 	char* token = strtok(input, delim);
