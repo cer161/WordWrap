@@ -69,6 +69,16 @@ char* deleteChar(char *str, char newLine){
 
 //Helper method to print each word on the correct line
 void printWord(char* word){
+	//If the token is just a space, return
+	if(strcmp(word, " ") == 0) return;
+
+	//A blank line needs to be printed
+	if(strcmp(word, "") == 0){
+		printf("\n\n");
+		chars=0;
+		return;
+	}
+
 	//If the token exceeds the width, print token on an individual line
 	if(strlen(word) > width){
 		printf("\n%s\n", word);
@@ -84,31 +94,35 @@ void printWord(char* word){
 		}
 		//If there is room on the current line, print the token on the current line
 		else{	
-			if(word[strlen(word)-1] == ' ') printf("%s", word);
-			else printf("%s ", word);
+			if(word[0] == ' '){
+				*word++;
+			}
+			if(word[strlen(word)-1] == ' '){
+				 printf("%s", word);
+			}
+			else{ 
+				printf("%s ", word);
+			}
 		}
 	}
 }
 
 
 //Wraps the text from a file and prints it to stdout
+//Still need to edit to take into consideration empty lines 
 int wrapFile(char* input){
 	const char delim[2] = " ";
 	char* token = strtok(input, delim);
-	char* tokenHelper;
-	int nonBlank;
 	while(token != NULL){
-		nonBlank = 1;
 		incorrectToken = 0;
-		//if the token contains a new line character, delete the new line character
+		//if the token contains a new line character and the token is not an empty line, delete the new line character
 		if(strchr(token, '\n')){
-			if(token[0] == '\n') nonBlank = 0;
-			if(nonBlank == 1) token = deleteChar(token, '\n');	
+			token = deleteChar(token, '\n');		
 		}
+		//Delete any tabs in the token
 		if(strchr(token, '\t')){
 			token = deleteChar(token, '\t');
 		}
-
 		//If the token contains multiple words, seperate them
 		if(incorrectToken > 1){
 			char* partial = token;
@@ -120,7 +134,6 @@ int wrapFile(char* input){
 			continue;	
 		}
 		printWord(token);
-		//printf("%d", incorrectToken);	
 		token = strtok(NULL, delim);
 	}
 	printf("\n");
