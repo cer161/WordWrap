@@ -111,6 +111,13 @@ void printWord(char* word){
 //Wraps the text from a file and prints it to stdout
 //Still need to edit to take into consideration empty lines 
 int wrapFile(char* input){
+	int lastIndex;
+	for(int i = 0; i< strlen(input); i++){
+		if(isspace(input[i]) == 0){
+			lastIndex = i;
+		}
+	}
+	input[lastIndex+1] = '\0';
 	const char delim[2] = " ";
 	char* token = strtok(input, delim);
 	while(token != NULL){
@@ -268,7 +275,9 @@ int main (int argc, char** argv) {
 			return EXIT_FAILURE;
 		}
 
-		freeList(&head);
+		//freeList(&head);
+		free(input);
+	
     	}
 
     	if(exceed_width == 1){
