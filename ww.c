@@ -15,6 +15,7 @@ static int width;
 static int exceed_width;
 static int chars;
 static int incorrectToken;
+static int printedLine;
 
 struct linkedList{
     char* data;
@@ -69,14 +70,24 @@ char* deleteChar(char *str, char newLine){
 
 //Helper method to print each word on the correct line
 void printWord(char* word){
+	
 	//If the token is just a space, return
-	if(strcmp(word, " ") == 0) return;
+	if(strcmp(word, " ") == 0){
+		return;
+	}
 
 	//A blank line needs to be printed
 	if(strcmp(word, "") == 0){
-		printf("\n\n");
-		chars=0;
+		chars = 0;
+		if(printedLine == 0){
+			printf("\n\n\n");
+			printedLine = 1;
+		}
+		
 		return;
+	}
+	else{
+		printedLine = 0;
 	}
 
 	//If the token exceeds the width, print token on an individual line
@@ -111,6 +122,7 @@ void printWord(char* word){
 //Wraps the text from a file and prints it to stdout
 //Still need to edit to take into consideration empty lines 
 int wrapFile(char* input){
+	printedLine = 0;
 	int lastIndex;
 	for(int i = 0; i< strlen(input); i++){
 		if(isspace(input[i]) == 0){
@@ -175,7 +187,7 @@ void freeList(linkedList** list){
 	linkedList* next = NULL;
 	while(temp != NULL){
 		next = temp->next;
-		free(temp->data);
+		//free(temp->data);
 		free(temp);
 		temp = next;
 	}
@@ -276,6 +288,10 @@ int main (int argc, char** argv) {
 		}
 
 		//freeList(&head);
+		//for(int i = 0; i<strlen(input); i++){
+		//	free(&input[i]);
+		
+		//}
 		free(input);
 	
     	}
