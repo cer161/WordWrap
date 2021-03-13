@@ -334,7 +334,7 @@ int main (int argc, char** argv) {
                                                 perror("There was an error closing the file");
                                                 return EXIT_FAILURE;
                                         }
-                ``                      // basis for file concat
+                                        // basis for file concat
                                         char wName[1024] ="wrap." ;
                                         // make new file name of form "wrap."file
                                         strcat(wName, file->d_name);
